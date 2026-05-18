@@ -2,9 +2,16 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   nickname text not null,
   avatar_url text,
-  role text not null default 'user' check (role in ('user', 'admin')),
+  role text not null default 'user',
   created_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  drop constraint if exists profiles_role_check;
+
+alter table public.profiles
+  add constraint profiles_role_check
+  check (role in ('user', 'admin', 'master'));
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -95,7 +102,7 @@ create policy "Admins can create meetups" on public.meetups
     exists (
       select 1 from public.profiles
       where profiles.id = auth.uid()
-      and profiles.role = 'admin'
+      and profiles.role in ('admin', 'master')
     )
   );
 
@@ -108,7 +115,7 @@ create policy "Users can read own applications and admins can read all" on publi
     or exists (
       select 1 from public.profiles
       where profiles.id = auth.uid()
-      and profiles.role = 'admin'
+      and profiles.role in ('admin', 'master')
     )
   );
 
@@ -117,7 +124,7 @@ create policy "Admins can confirm applications" on public.meetup_applications
     exists (
       select 1 from public.profiles
       where profiles.id = auth.uid()
-      and profiles.role = 'admin'
+      and profiles.role in ('admin', 'master')
     )
   );
 
@@ -134,12 +141,15 @@ create policy "Users can read own admin requests and admins can read all" on pub
     )
   );
 
-create policy "Admins can review admin requests" on public.admin_requests
+drop policy if exists "Admins can review admin requests" on public.admin_requests;
+drop policy if exists "Masters can review admin requests" on public.admin_requests;
+
+create policy "Masters can review admin requests" on public.admin_requests
   for update using (
     exists (
       select 1 from public.profiles
       where profiles.id = auth.uid()
-      and profiles.role = 'admin'
+      and profiles.role = 'master'
     )
   );
 

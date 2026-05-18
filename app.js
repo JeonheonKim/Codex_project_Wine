@@ -18,7 +18,7 @@ const imageGradients = [
 const defaultState = {
   currentUser: null,
   users: [
-    { id: "u-admin", name: "Admin Kim", role: "admin", avatar: "AK" },
+    { id: "u-admin", name: "Master Kim", role: "master", avatar: "MK" },
     { id: "u-user", name: "카카오 와인러", role: "user", avatar: "KW" },
   ],
   adminRequests: [
@@ -144,19 +144,21 @@ document.querySelectorAll(".panel-tab").forEach((button) => {
   button.addEventListener("click", () => setPanelTab(button.dataset.panelTab));
 });
 
-document.querySelector("#adminRequestForm").addEventListener("submit", (event) => {
+document.querySelector("#adminRequestForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const user = getCurrentUser();
   if (!user) return login();
   const existing = state.adminRequests.find((request) => request.userId === user.id && request.status === "pending");
   if (!existing) {
-    state.adminRequests.push({
+    const request = {
       id: crypto.randomUUID(),
       userId: user.id,
       userName: user.name,
       reason: document.querySelector("#adminReason").value.trim(),
       status: "pending",
-    });
+    };
+    state.adminRequests.push(request);
+    await notifyMasterAdminRequest(request);
   }
   event.currentTarget.reset();
   persist();
@@ -211,10 +213,13 @@ function loadState() {
 }
 
 function normalizeState(savedState) {
+  const users = (savedState.users ?? defaultState.users).map((user) =>
+    user.id === "u-admin" ? { ...user, name: "Master Kim", role: "master", avatar: "MK" } : user,
+  );
   return {
     ...defaultState,
     ...savedState,
-    users: savedState.users ?? defaultState.users,
+    users,
     adminRequests: savedState.adminRequests ?? defaultState.adminRequests,
     gallery: savedState.gallery ?? savedState.posts ?? defaultState.gallery,
     meetups: savedState.meetups ?? defaultState.meetups,
@@ -231,7 +236,11 @@ function getCurrentUser() {
 }
 
 function isAdmin(user) {
-  return user?.role === "admin";
+  return user?.role === "admin" || user?.role === "master";
+}
+
+function isMaster(user) {
+  return user?.role === "master";
 }
 
 async function login() {
@@ -257,6 +266,21 @@ function loginAdmin() {
   state.currentUser = { id: "u-admin" };
   persist();
   render();
+}
+
+async function notifyMasterAdminRequest(request) {
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.functions.invoke("notify-admin-request", {
+    body: {
+      userId: request.userId,
+      userName: request.userName,
+      reason: request.reason,
+      requestedAt: new Date().toISOString(),
+    },
+  });
+  if (error) {
+    console.warn("Admin request email notification failed.", error);
+  }
 }
 
 async function logout() {
@@ -481,18 +505,32 @@ function renderUserPanel() {
 
   document.querySelector("#profileAvatar").textContent = user.avatar;
   document.querySelector("#profileName").textContent = user.name;
-  document.querySelector("#profileRole").textContent = isAdmin(user) ? "ADMIN 승인 완료" : "USER";
+  document.querySelector("#profileRole").textContent = isMaster(user)
+    ? "MASTER"
+    : isAdmin(user)
+      ? "ADMIN 승인 완료"
+      : "USER";
 
   const request = state.adminRequests.find((item) => item.userId === user.id);
   const requestStatus = document.querySelector("#adminRequestStatus");
   const requestForm = document.querySelector("#adminRequestForm");
+  const requestReason = document.querySelector("#adminReason");
+  const requestButton = document.querySelector("#adminRequestButton");
+
+  requestReason.disabled = false;
+  requestButton.disabled = false;
+  requestButton.textContent = "Admin 신청";
 
   if (isAdmin(user)) {
     requestStatus.textContent = "이미 Admin 권한이 승인되어 모임을 등록할 수 있습니다.";
     requestForm.classList.add("hidden");
   } else if (request?.status === "pending") {
-    requestStatus.textContent = "Admin 신청이 접수되었습니다. 승인 페이지에서 관리자가 확인할 수 있습니다.";
-    requestForm.classList.add("hidden");
+    requestStatus.textContent = "Admin 신청이 접수되었습니다. Master 승인 전까지 신청중 상태로 표시됩니다.";
+    requestForm.classList.remove("hidden");
+    requestReason.value = request.reason;
+    requestReason.disabled = true;
+    requestButton.disabled = true;
+    requestButton.textContent = "신청중";
   } else {
     requestStatus.textContent = "모임을 직접 등록하려면 Admin 권한을 신청하세요.";
     requestForm.classList.remove("hidden");
@@ -501,18 +539,24 @@ function renderUserPanel() {
   const adminGate = document.querySelector("#adminGate");
   const adminTools = document.querySelector("#adminTools");
   if (isAdmin(user)) {
-    adminGate.textContent = "Admin 페이지입니다. 신청 승인과 모임 등록을 관리할 수 있습니다.";
+    adminGate.textContent = isMaster(user)
+      ? "Master 페이지입니다. Admin 신청 승인과 운영 도구를 관리할 수 있습니다."
+      : "Admin 페이지입니다. 승인된 모임 운영 도구를 사용할 수 있습니다.";
     adminTools.classList.remove("hidden");
   } else {
     adminGate.textContent = "Admin 승인 유저만 접근할 수 있습니다. USER 탭에서 신청해주세요.";
     adminTools.classList.add("hidden");
   }
-  renderApprovalList();
+  renderApprovalList(user);
   renderPaymentList();
 }
 
-function renderApprovalList() {
+function renderApprovalList(currentUser) {
   const list = document.querySelector("#approvalList");
+  if (!isMaster(currentUser)) {
+    list.innerHTML = `<div class="empty-state">Admin 신청 승인은 Master 권한에서만 가능합니다.</div>`;
+    return;
+  }
   const pending = state.adminRequests.filter((request) => request.status === "pending");
   if (!pending.length) {
     list.innerHTML = `<div class="empty-state">대기 중인 Admin 신청이 없습니다.</div>`;

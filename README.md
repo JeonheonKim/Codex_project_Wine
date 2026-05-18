@@ -10,6 +10,33 @@
 
 `app.js`에는 Supabase Project URL과 anon public key가 연결되어 있습니다. Supabase 콘솔의 SQL Editor에서 `supabase-schema.sql`을 실행한 뒤 Kakao Auth provider를 활성화하면 카카오 로그인부터 검증할 수 있습니다.
 
+Master 계정은 Admin 신청자를 승인하는 운영자 권한입니다. 실제 카카오 로그인 계정을 Master로 지정하려면 Supabase SQL Editor에서 해당 사용자의 `profiles.role`을 `master`로 변경합니다.
+
+```sql
+update public.profiles
+set role = 'master'
+where id = '<내 auth.users id>';
+```
+
+## Admin 신청 이메일 알림
+
+Admin 신청 시 `notify-admin-request` Supabase Edge Function을 호출합니다. 이메일 발송은 Resend API를 사용하도록 구성되어 있습니다.
+
+필요한 Supabase Function Secrets:
+
+```text
+RESEND_API_KEY=Resend에서 발급받은 API Key
+ADMIN_NOTIFICATION_EMAIL=kimkjh0645@naver.com
+ADMIN_NOTIFICATION_FROM=WINE TOGETHER <onboarding@resend.dev>
+```
+
+배포 명령 예시:
+
+```bash
+supabase functions deploy notify-admin-request --project-ref fdefmowriudrvjrfxywx
+supabase secrets set RESEND_API_KEY=... ADMIN_NOTIFICATION_EMAIL=kimkjh0645@naver.com --project-ref fdefmowriudrvjrfxywx
+```
+
 ## 배포
 
 정적 웹앱이므로 Cloudflare Pages 또는 Netlify에 GitHub 저장소를 연결해 배포할 수 있습니다.
