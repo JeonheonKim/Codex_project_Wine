@@ -1,0 +1,488 @@
+:root {
+  color-scheme: light;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --ink: #241f21;
+  --muted: #6b6267;
+  --line: #e8e1df;
+  --paper: #fffaf8;
+  --surface: #ffffff;
+  --wine: #8c1d3d;
+  --wine-dark: #5f1228;
+  --leaf: #315f4a;
+  --gold: #b48237;
+  --rose: #f7e7e3;
+  --shadow: 0 18px 45px rgba(77, 33, 40, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(140, 29, 61, 0.12), transparent 28rem),
+    linear-gradient(180deg, #fff7f3 0%, #f7f4ef 42%, #ffffff 100%);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem clamp(1rem, 4vw, 4rem);
+  background: rgba(255, 250, 248, 0.88);
+  border-bottom: 1px solid rgba(232, 225, 223, 0.75);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 13rem;
+}
+
+.brand-mark {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  background: var(--wine);
+  border-radius: 50%;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand small {
+  margin-top: 0.15rem;
+  color: var(--muted);
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: #f0e8e4;
+  border-radius: 999px;
+}
+
+.tab-button {
+  min-width: 4.75rem;
+  padding: 0.65rem 0.9rem;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+}
+
+.tab-button.active {
+  color: var(--ink);
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(67, 35, 38, 0.1);
+}
+
+.kakao-button,
+.primary-button,
+.join-button {
+  border: 0;
+  border-radius: 0.55rem;
+  font-weight: 800;
+}
+
+.kakao-button {
+  padding: 0.75rem 1rem;
+  color: #231f20;
+  background: #fee500;
+}
+
+main {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding-bottom: 4rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.6fr);
+  gap: 2rem;
+  align-items: end;
+  min-height: 23rem;
+  padding: 4rem 0 2rem;
+}
+
+.hero h1 {
+  max-width: 52rem;
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 5.2rem);
+  line-height: 1.02;
+}
+
+.hero p {
+  max-width: 42rem;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.eyebrow {
+  margin: 0 0 0.65rem;
+  color: var(--wine);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.hero-panel {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(232, 225, 223, 0.9);
+  border-radius: 0.7rem;
+  box-shadow: var(--shadow);
+}
+
+.hero-panel div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.9rem;
+  background: #fff;
+  border-radius: 0.45rem;
+}
+
+.hero-panel strong {
+  color: var(--wine-dark);
+  font-size: 2rem;
+}
+
+.hero-panel span,
+.post-meta,
+.place,
+.comments,
+.meetup-details,
+.join-panel span,
+.summary-card p {
+  color: var(--muted);
+}
+
+.view {
+  display: none;
+}
+
+.active-view {
+  display: block;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  margin: 1.5rem 0 1rem;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.user-badge {
+  padding: 0.55rem 0.8rem;
+  color: var(--leaf);
+  background: #e7f0eb;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.composer {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  box-shadow: 0 12px 30px rgba(36, 31, 33, 0.06);
+}
+
+.form-row {
+  display: grid;
+  gap: 1rem;
+}
+
+.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.three-col {
+  grid-template-columns: 1.2fr 0.55fr 0.7fr;
+}
+
+label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.85rem;
+  color: var(--ink);
+  background: #fffcfb;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--wine);
+  box-shadow: 0 0 0 3px rgba(140, 29, 61, 0.12);
+}
+
+.primary-button {
+  justify-self: end;
+  padding: 0.9rem 1.25rem;
+  color: #fff;
+  background: var(--wine);
+}
+
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.post-card,
+.meetup-card,
+.summary-card {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  box-shadow: 0 10px 24px rgba(36, 31, 33, 0.06);
+}
+
+.photo-frame {
+  min-height: 15rem;
+  background:
+    linear-gradient(135deg, rgba(140, 29, 61, 0.18), rgba(49, 95, 74, 0.2)),
+    #f2e8e3;
+  background-position: center;
+  background-size: cover;
+}
+
+.post-body {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.post-card h3,
+.meetup-card h3,
+.summary-card h3 {
+  margin: 0;
+}
+
+.place,
+.story,
+.meetup-description,
+.summary-card p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.comments {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.88rem;
+}
+
+.comment-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.comment-form input {
+  min-width: 0;
+}
+
+.comment-form button {
+  padding: 0 0.8rem;
+  color: #fff;
+  background: var(--leaf);
+  border: 0;
+  border-radius: 0.45rem;
+  font-weight: 800;
+}
+
+.meetup-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.meetup-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(15rem, 0.35fr);
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+}
+
+.meetup-details {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  background: var(--paper);
+  border-radius: 0.5rem;
+  font-size: 0.92rem;
+}
+
+.join-panel {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  background: #f8ece9;
+  border-radius: 0.5rem;
+}
+
+.join-panel strong {
+  color: var(--wine-dark);
+  font-size: 1.35rem;
+}
+
+.join-button {
+  padding: 0.75rem 1rem;
+  color: #fff;
+  background: var(--leaf);
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.summary-card {
+  padding: 1rem;
+}
+
+.summary-icon {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  padding: 0.4rem 0.55rem;
+  color: #fff;
+  background: var(--gold);
+  border-radius: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.empty-state {
+  padding: 2rem;
+  color: var(--muted);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px dashed var(--line);
+  border-radius: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .topbar,
+  .hero,
+  .meetup-card,
+  .profile-layout,
+  .post-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    position: static;
+  }
+
+  .nav-tabs {
+    order: 3;
+    justify-content: space-between;
+  }
+
+  .hero {
+    min-height: auto;
+    padding-top: 2rem;
+  }
+
+  .two-col,
+  .three-col {
+    grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  main {
+    width: min(100% - 1rem, 1180px);
+  }
+
+  .topbar {
+    padding: 0.85rem;
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .tab-button {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .hero h1 {
+    font-size: 2.35rem;
+  }
+
+  .comment-form {
+    grid-template-columns: 1fr;
+  }
+}

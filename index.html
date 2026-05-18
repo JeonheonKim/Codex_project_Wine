@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PourLog MVP</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">P</span>
+        <div>
+          <strong>PourLog</strong>
+          <small>와인 취향을 기록하고 함께 마시는 커뮤니티</small>
+        </div>
+      </div>
+      <nav class="nav-tabs" aria-label="주요 섹션">
+        <button class="tab-button active" data-view="feed">피드</button>
+        <button class="tab-button" data-view="meetups">모임</button>
+        <button class="tab-button" data-view="profile">내 기록</button>
+      </nav>
+      <button id="loginButton" class="kakao-button" type="button">카카오 로그인</button>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Wine social MVP</p>
+          <h1>오늘 마신 와인을 자랑하고, 다음 모임까지 바로 이어가세요.</h1>
+          <p>
+            사진 중심 피드, 댓글, 선입금 기반 모임 모집을 한 화면에서 검증하는
+            첫 번째 제품 콘셉트입니다.
+          </p>
+        </div>
+        <div class="hero-panel" aria-label="서비스 핵심 지표">
+          <div>
+            <strong id="statPosts">0</strong>
+            <span>공유된 기록</span>
+          </div>
+          <div>
+            <strong id="statMeetups">0</strong>
+            <span>모집 중 모임</span>
+          </div>
+          <div>
+            <strong id="statComments">0</strong>
+            <span>댓글</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="feedView" class="view active-view">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Community feed</p>
+            <h2>와인 인증 피드</h2>
+          </div>
+          <span id="activeUserBadge" class="user-badge">로그인이 필요합니다</span>
+        </div>
+
+        <form id="postForm" class="composer">
+          <div class="form-row two-col">
+            <label>
+              와인 이름
+              <input id="wineName" name="wineName" type="text" placeholder="예: Barolo 2019" required />
+            </label>
+            <label>
+              마신 장소
+              <input id="place" name="place" type="text" placeholder="예: 성수 와인바" required />
+            </label>
+          </div>
+          <label>
+            사진
+            <input id="photo" name="photo" type="file" accept="image/*" />
+          </label>
+          <label>
+            자랑글
+            <textarea id="story" name="story" rows="4" placeholder="향, 음식 페어링, 같이 마신 사람들..." required></textarea>
+          </label>
+          <button class="primary-button" type="submit">기록 올리기</button>
+        </form>
+
+        <div id="postList" class="post-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="meetupsView" class="view">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Meetup board</p>
+            <h2>와인 모임 모집</h2>
+          </div>
+        </div>
+
+        <form id="meetupForm" class="composer">
+          <div class="form-row two-col">
+            <label>
+              모임 제목
+              <input id="meetupTitle" type="text" placeholder="예: 내추럴 와인 블라인드 테이스팅" required />
+            </label>
+            <label>
+              날짜와 시간
+              <input id="meetupDate" type="datetime-local" required />
+            </label>
+          </div>
+          <div class="form-row three-col">
+            <label>
+              장소
+              <input id="meetupPlace" type="text" placeholder="예: 합정 프라이빗 룸" required />
+            </label>
+            <label>
+              정원
+              <input id="capacity" type="number" min="2" max="50" value="6" required />
+            </label>
+            <label>
+              선입금
+              <input id="deposit" type="number" min="0" step="1000" placeholder="30000" required />
+            </label>
+          </div>
+          <div class="form-row two-col">
+            <label>
+              은행/계좌
+              <input id="account" type="text" placeholder="예: 카카오뱅크 3333-..." required />
+            </label>
+            <label>
+              예금주
+              <input id="holder" type="text" placeholder="예: 김와인" required />
+            </label>
+          </div>
+          <label>
+            모임 소개
+            <textarea id="meetupDescription" rows="4" placeholder="준비 와인, 안주, 참가 조건 등을 적어주세요." required></textarea>
+          </label>
+          <button class="primary-button" type="submit">모임 만들기</button>
+        </form>
+
+        <div id="meetupList" class="meetup-list" aria-live="polite"></div>
+      </section>
+
+      <section id="profileView" class="view">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">My cellar</p>
+            <h2>내 활동 요약</h2>
+          </div>
+        </div>
+        <div class="profile-layout">
+          <article class="summary-card">
+            <span class="summary-icon">ID</span>
+            <h3 id="profileName">게스트</h3>
+            <p id="profileDescription">카카오 로그인 후 댓글과 모집글 작성자를 확인할 수 있습니다.</p>
+          </article>
+          <article class="summary-card">
+            <span class="summary-icon">POST</span>
+            <h3 id="myPostCount">0개</h3>
+            <p>내가 올린 와인 기록</p>
+          </article>
+          <article class="summary-card">
+            <span class="summary-icon">HOST</span>
+            <h3 id="myMeetupCount">0개</h3>
+            <p>내가 개설한 모임</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <template id="postTemplate">
+      <article class="post-card">
+        <div class="photo-frame"></div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="author"></span>
+            <time></time>
+          </div>
+          <h3></h3>
+          <p class="place"></p>
+          <p class="story"></p>
+          <div class="comments"></div>
+          <form class="comment-form">
+            <input type="text" placeholder="댓글 남기기" required />
+            <button type="submit">등록</button>
+          </form>
+        </div>
+      </article>
+    </template>
+
+    <template id="meetupTemplate">
+      <article class="meetup-card">
+        <div>
+          <div class="post-meta">
+            <span class="host"></span>
+            <time></time>
+          </div>
+          <h3></h3>
+          <p class="meetup-description"></p>
+        </div>
+        <div class="meetup-details"></div>
+        <div class="join-panel">
+          <strong class="deposit"></strong>
+          <span class="account"></span>
+          <button type="button" class="join-button">참가 신청</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
