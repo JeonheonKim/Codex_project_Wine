@@ -268,7 +268,6 @@ function moveBanner(direction) {
 function render() {
   renderBanners();
   renderAuth();
-  renderStats();
   renderGallery();
   renderMeetups();
   renderUserPanel();
@@ -293,12 +292,6 @@ function renderAuth() {
   const user = getCurrentUser();
   authButton.textContent = user ? "USER INFO" : "LOGIN";
   authButton.classList.toggle("user-icon", Boolean(user));
-}
-
-function renderStats() {
-  document.querySelector("#galleryCount").textContent = state.gallery.length;
-  document.querySelector("#meetupCount").textContent = state.meetups.length;
-  document.querySelector("#adminCount").textContent = state.users.filter((user) => user.role === "admin").length;
 }
 
 function renderGallery() {
