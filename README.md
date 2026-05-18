@@ -14,10 +14,36 @@
 
 정적 웹앱이므로 Cloudflare Pages 또는 Netlify에 GitHub 저장소를 연결해 배포할 수 있습니다.
 
+현재 배포 URL:
+
+```text
+https://projectwine.kimkjh0645.workers.dev
+```
+
 - Build command: 비워두기
 - Output directory: `/` 또는 비워두기
-- 배포 후 Supabase Authentication URL Configuration에 실제 사이트 URL을 추가합니다.
+- Supabase Authentication URL Configuration에 실제 사이트 URL을 추가합니다.
 - Kakao Developers에는 Supabase Callback URL과 배포 도메인을 등록합니다.
+
+Supabase에 추가할 URL:
+
+```text
+Site URL: https://projectwine.kimkjh0645.workers.dev
+Redirect URLs:
+http://127.0.0.1:4174
+https://projectwine.kimkjh0645.workers.dev
+```
+
+Kakao Developers에 추가할 값:
+
+```text
+Web platform domain:
+http://127.0.0.1:4174
+https://projectwine.kimkjh0645.workers.dev
+
+Redirect URI:
+https://fdefmowriudrvjrfxywx.supabase.co/auth/v1/callback
+```
 
 ## MVP 범위
 
