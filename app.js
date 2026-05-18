@@ -62,7 +62,7 @@ const defaultState = {
   ],
   meetups: [
     {
-      id: crypto.randomUUID(),
+      id: "seed-pinot",
       host: "Admin Kim",
       title: "피노 누아 4종 비교 테이스팅",
       date: new Date(Date.now() + 1000 * 60 * 60 * 72).toISOString(),
@@ -74,7 +74,7 @@ const defaultState = {
       description: "부르고뉴, 오리건, 뉴질랜드, 독일 피노를 한 잔씩 비교합니다.",
     },
     {
-      id: crypto.randomUUID(),
+      id: "seed-natural",
       host: "Admin Kim",
       title: "내추럴 와인 입문 모임",
       date: new Date(Date.now() + 1000 * 60 * 60 * 120).toISOString(),
@@ -84,6 +84,16 @@ const defaultState = {
       deposit: 35000,
       account: "토스뱅크 1000-22-778899",
       description: "가볍게 시작하는 내추럴 와인 3종과 치즈 페어링.",
+    },
+  ],
+  meetupApplications: [
+    {
+      id: crypto.randomUUID(),
+      meetupId: "seed-pinot",
+      userId: "u-user",
+      userName: "카카오 와인러",
+      status: "pending",
+      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     },
   ],
 };
@@ -200,6 +210,7 @@ function normalizeState(savedState) {
     adminRequests: savedState.adminRequests ?? defaultState.adminRequests,
     gallery: savedState.gallery ?? savedState.posts ?? defaultState.gallery,
     meetups: savedState.meetups ?? defaultState.meetups,
+    meetupApplications: savedState.meetupApplications ?? defaultState.meetupApplications,
   };
 }
 
@@ -331,7 +342,14 @@ function renderMeetups() {
 
   list.innerHTML = state.meetups
     .map((meetup) => {
-      const remaining = Math.max(meetup.capacity - meetup.joined, 0);
+      const confirmedCount = getConfirmedCount(meetup.id, meetup.joined);
+      const pendingCount = getPendingCount(meetup.id);
+      const remaining = Math.max(meetup.capacity - confirmedCount, 0);
+      const userApplication = user
+        ? state.meetupApplications.find((item) => item.meetupId === meetup.id && item.userId === user.id)
+        : null;
+      const buttonText = getJoinButtonText(remaining, userApplication);
+      const disabled = remaining === 0 || Boolean(userApplication);
       return `
         <article class="meetup-card">
           <div>
@@ -344,14 +362,15 @@ function renderMeetups() {
           </div>
           <div class="meetup-detail">
             <span>장소 ${escapeHtml(meetup.place)}</span>
-            <span>정원 ${meetup.joined}/${meetup.capacity}명</span>
+            <span>확정 ${confirmedCount}/${meetup.capacity}명</span>
+            <span>입금 확인 대기 ${pendingCount}명</span>
             <span>남은 자리 ${remaining}명</span>
           </div>
           <div class="join-box">
             <strong>${meetup.deposit.toLocaleString()}원</strong>
             <span>${escapeHtml(meetup.account)}</span>
-            <button class="join-button" type="button" data-join-id="${meetup.id}" ${remaining === 0 ? "disabled" : ""}>
-              ${remaining === 0 ? "모집 완료" : "참가 신청"}
+            <button class="join-button" type="button" data-join-id="${meetup.id}" ${disabled ? "disabled" : ""}>
+              ${buttonText}
             </button>
           </div>
         </article>
@@ -361,15 +380,47 @@ function renderMeetups() {
 
   document.querySelectorAll("[data-join-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (!getCurrentUser()) return openUserPanel();
+      const currentUser = getCurrentUser();
+      if (!currentUser) return openUserPanel();
       const meetup = state.meetups.find((item) => item.id === button.dataset.joinId);
-      if (meetup && meetup.joined < meetup.capacity) {
-        meetup.joined += 1;
+      const confirmedCount = meetup ? getConfirmedCount(meetup.id, meetup.joined) : 0;
+      const alreadyApplied = state.meetupApplications.some(
+        (item) => item.meetupId === meetup?.id && item.userId === currentUser.id,
+      );
+      if (meetup && confirmedCount < meetup.capacity && !alreadyApplied) {
+        state.meetupApplications.push({
+          id: crypto.randomUUID(),
+          meetupId: meetup.id,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+        });
         persist();
-        renderMeetups();
+        render();
       }
     });
   });
+}
+
+function getConfirmedCount(meetupId, fallbackJoined = 0) {
+  const confirmed = state.meetupApplications.filter(
+    (application) => application.meetupId === meetupId && application.status === "confirmed",
+  ).length;
+  return Math.max(confirmed, fallbackJoined ?? 0);
+}
+
+function getPendingCount(meetupId) {
+  return state.meetupApplications.filter(
+    (application) => application.meetupId === meetupId && application.status === "pending",
+  ).length;
+}
+
+function getJoinButtonText(remaining, application) {
+  if (remaining === 0) return "모집 완료";
+  if (application?.status === "pending") return "입금 확인 대기";
+  if (application?.status === "confirmed") return "참가 확정";
+  return "참가 신청";
 }
 
 function renderUserPanel() {
@@ -409,6 +460,7 @@ function renderUserPanel() {
     adminTools.classList.add("hidden");
   }
   renderApprovalList();
+  renderPaymentList();
 }
 
 function renderApprovalList() {
@@ -437,6 +489,44 @@ function renderApprovalList() {
       if (request && user) {
         request.status = "approved";
         user.role = "admin";
+        persist();
+        render();
+      }
+    });
+  });
+}
+
+function renderPaymentList() {
+  const list = document.querySelector("#paymentList");
+  if (!list) return;
+
+  const pending = state.meetupApplications.filter((application) => application.status === "pending");
+  if (!pending.length) {
+    list.innerHTML = `<div class="empty-state">입금 확인 대기 신청이 없습니다.</div>`;
+    return;
+  }
+
+  list.innerHTML = pending
+    .map((application) => {
+      const meetup = state.meetups.find((item) => item.id === application.meetupId);
+      return `
+        <article class="approval-card">
+          <strong>${escapeHtml(application.userName)}</strong>
+          <p>${escapeHtml(meetup?.title ?? "삭제된 모임")}</p>
+          <p>${escapeHtml(meetup?.account ?? "")}</p>
+          <button class="approve-button" type="button" data-confirm-payment-id="${application.id}">
+            입금 확인
+          </button>
+        </article>
+      `;
+    })
+    .join("");
+
+  document.querySelectorAll("[data-confirm-payment-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const application = state.meetupApplications.find((item) => item.id === button.dataset.confirmPaymentId);
+      if (application) {
+        application.status = "confirmed";
         persist();
         render();
       }
