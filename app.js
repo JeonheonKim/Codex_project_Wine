@@ -1,4 +1,12 @@
 const STORAGE_KEY = "wine-together-state-v2";
+const SUPABASE_URL = "https://fdefmowriudrvjrfxywx.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZWZtb3dyaXVkcnZqcmZ4eXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNzU3NzgsImV4cCI6MjA5NDY1MTc3OH0.xtoPB0UgoS74rkZjUwD_Z1Xixkbm0zHgHSQIyaZuRi0";
+
+const supabaseNamespace =
+  window.supabase ?? globalThis.supabase ?? (typeof supabase !== "undefined" ? supabase : undefined);
+const supabaseClient = supabaseNamespace?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+document.documentElement.dataset.supabaseReady = supabaseClient ? "true" : "false";
 
 const imageGradients = [
   "linear-gradient(135deg, #7f1533, #d49a68)",
@@ -226,7 +234,20 @@ function isAdmin(user) {
   return user?.role === "admin";
 }
 
-function login() {
+async function login() {
+  if (supabaseClient) {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: "kakao",
+      options: {
+        redirectTo: window.location.origin + window.location.pathname,
+      },
+    });
+    if (error) {
+      console.warn("Supabase Kakao login failed; falling back to demo login.", error);
+    } else {
+      return;
+    }
+  }
   state.currentUser = { id: "u-user" };
   persist();
   render();
@@ -238,10 +259,37 @@ function loginAdmin() {
   render();
 }
 
-function logout() {
+async function logout() {
+  if (supabaseClient) {
+    await supabaseClient.auth.signOut();
+  }
   state.currentUser = null;
   persist();
   render();
+}
+
+async function hydrateSupabaseSession() {
+  if (!supabaseClient) return;
+  const { data } = await supabaseClient.auth.getSession();
+  const sessionUser = data.session?.user;
+  if (!sessionUser) return;
+
+  const nickname =
+    sessionUser.user_metadata?.name ??
+    sessionUser.user_metadata?.nickname ??
+    sessionUser.user_metadata?.preferred_username ??
+    "카카오 와인러";
+  const existing = state.users.find((user) => user.id === sessionUser.id);
+  if (!existing) {
+    state.users.push({
+      id: sessionUser.id,
+      name: nickname,
+      role: "user",
+      avatar: nickname.slice(0, 2).toUpperCase(),
+    });
+  }
+  state.currentUser = { id: sessionUser.id };
+  persist();
 }
 
 function openUserPanel() {
@@ -573,4 +621,4 @@ function escapeHtml(value) {
   });
 }
 
-render();
+hydrateSupabaseSession().finally(render);
