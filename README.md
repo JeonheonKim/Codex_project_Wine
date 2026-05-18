@@ -20,21 +20,67 @@ where id = '<내 auth.users id>';
 
 ## Admin 신청 이메일 알림
 
-Admin 신청 시 `notify-admin-request` Supabase Edge Function을 호출합니다. 이메일 발송은 Resend API를 사용하도록 구성되어 있습니다.
+Admin 신청 시 `notify-admin-request` Supabase Edge Function을 호출합니다. 이메일 발송은 Google Apps Script 웹훅을 통해 Gmail에서 보낼 수 있습니다.
+
+### 1. Google Apps Script 만들기
+
+[Google Apps Script](https://script.google.com/)에서 새 프로젝트를 만들고 아래 코드를 붙여넣습니다.
+
+```js
+const WEBHOOK_SECRET = '원하는_긴_비밀값';
+const TO_EMAIL = 'kimkjh0645@gmail.com';
+
+function doPost(e) {
+  const body = JSON.parse(e.postData.contents || '{}');
+
+  if (body.secret !== WEBHOOK_SECRET) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: 'unauthorized' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const text = [
+    '새 Admin 권한 신청이 접수되었습니다.',
+    '',
+    `신청자 ID: ${body.userId}`,
+    `신청자 이름: ${body.userName}`,
+    `신청 사유: ${body.reason}`,
+    '',
+    'WINE TOGETHER Master 계정으로 접속해 승인 여부를 확인해주세요.',
+  ].join('\n');
+
+  GmailApp.sendEmail(TO_EMAIL, body.subject || '[WINE TOGETHER] Admin 권한 신청', text);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+배포:
+
+```text
+Deploy > New deployment > Web app
+Execute as: Me
+Who has access: Anyone
+```
+
+배포 후 Web app URL을 복사합니다.
+
+### 2. Supabase Function Secrets 설정
 
 필요한 Supabase Function Secrets:
 
 ```text
-RESEND_API_KEY=Resend에서 발급받은 API Key
-ADMIN_NOTIFICATION_EMAIL=kimkjh0645@gmail.com
-ADMIN_NOTIFICATION_FROM=WINE TOGETHER <onboarding@resend.dev>
+ADMIN_NOTIFICATION_WEBHOOK_URL=Google Apps Script Web app URL
+ADMIN_NOTIFICATION_WEBHOOK_SECRET=Apps Script에 넣은 같은 비밀값
 ```
 
 배포 명령 예시:
 
 ```bash
 supabase functions deploy notify-admin-request --project-ref fdefmowriudrvjrfxywx
-supabase secrets set RESEND_API_KEY=... ADMIN_NOTIFICATION_EMAIL=kimkjh0645@gmail.com --project-ref fdefmowriudrvjrfxywx
+supabase secrets set ADMIN_NOTIFICATION_WEBHOOK_URL=... ADMIN_NOTIFICATION_WEBHOOK_SECRET=... --project-ref fdefmowriudrvjrfxywx
 ```
 
 ## 배포
